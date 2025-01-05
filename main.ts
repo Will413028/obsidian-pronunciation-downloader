@@ -20,13 +20,42 @@ class ForvoAPI {
 		this.apiKey = apiKey;
 	}
 
-	async searchWord(word: string, language: string = 'en') {
-		const url = `${this.baseUrl}/key/${this.apiKey}/format/json/action/word-pronunciations/word/${encodeURIComponent(word)}/language/${language}`;
+	async searchWord(word: string, options: {
+		language?: string;
+		country?: string;
+		username?: string;
+		sex?: 'm' | 'f';
+		rate?: number;
+		order?: 'date-desc' | 'date-asc' | 'rate-desc' | 'rate-asc';
+		limit?: number;
+	} = {}) {
+
+		let url = `${this.baseUrl}/action/word-pronunciations/format/json/word/${encodeURIComponent(word)}`;
+		
+		// Add optional parameters
+		if (options.language) url += `/language/${options.language}`;
+		if (options.sex) url += `/sex/${options.sex}`;
+		if (options.order) url += `/order/${options.order}`;
+		if (options.country) url += `/country/${options.country}`;
+		if (options.username) url += `/username/${options.username}`;
+		if (options.rate) url += `/rate/${options.rate}`;
+		if (options.limit) url += `/limit/${options.limit}`;
+		
+		// Add API key at the end
+		url += `/key/${this.apiKey}`;
+
 		const response = await fetch(url);
+		
 		if (!response.ok) {
 			throw new Error(`Failed to fetch pronunciations: ${response.statusText}`);
 		}
-		return await response.json();
+		
+		const data = await response.json();
+		if (data.error) {
+			throw new Error(`Forvo API error: ${data.error}`);
+		}
+		
+		return data;
 	}
 
 	async downloadPronunciation(url: string): Promise<ArrayBuffer> {
