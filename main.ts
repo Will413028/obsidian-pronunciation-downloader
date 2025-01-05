@@ -77,7 +77,7 @@ export default class PronunciationDownloader extends Plugin {
 	settings: PronunciationDownloaderSettings;
 	private forvoApi: ForvoAPI;
 
-	async downloadPronunciation(word: string) {
+	async downloadPronunciation(word: string, editor?: Editor) {
 		try {
 			const result = await this.forvoApi.searchWord(word);
 			if (result.items && result.items.length > 0) {
@@ -87,6 +87,13 @@ export default class PronunciationDownloader extends Plugin {
 				// Save the file in the vault
 				const fileName = `${this.settings.downloadPath}/${word}_${pronunciation.id}.mp3`;
 				await this.app.vault.createBinary(fileName, audioData);
+				
+				// Insert file link in the note if editor is provided
+				if (editor) {
+					const cursor = editor.getCursor();
+					const fileLink = `![[${fileName}]]`;
+					editor.replaceRange(`\n${fileLink}\n`, cursor);
+				}
 				
 				new Notice(`Downloaded pronunciation for "${word}"`);
 			} else {
@@ -109,7 +116,7 @@ export default class PronunciationDownloader extends Plugin {
 			if (activeView) {
 				const selection = activeView.editor.getSelection();
 				if (selection) {
-					this.downloadPronunciation(selection);
+					this.downloadPronunciation(selection, activeView.editor);
 				} else {
 					new Notice('Please select a word to download its pronunciation');
 				}
@@ -123,7 +130,7 @@ export default class PronunciationDownloader extends Plugin {
 			editorCallback: (editor: Editor) => {
 				const selection = editor.getSelection();
 				if (selection) {
-					this.downloadPronunciation(selection);
+					this.downloadPronunciation(selection, editor);
 				} else {
 					new Notice('Please select a word to download its pronunciation');
 				}
