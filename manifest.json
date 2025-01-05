@@ -1,11 +1,10 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "obsidian-pronunciation-downloader",
+	"name": "obsidian-pronunciation-downloader",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Download word pronunciations from Forvo directly in Obsidian.",
+	"author": "Your Name",
+	"authorUrl": "https://github.com/yourusername",
 	"isDesktopOnly": false
 }
