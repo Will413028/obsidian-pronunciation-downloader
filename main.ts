@@ -1,6 +1,4 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
-
-// Remember to rename these classes and interfaces!
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, requestUrl } from 'obsidian';
 
 interface PronunciationDownloaderSettings {
 	apiKey: string;
@@ -29,7 +27,6 @@ class ForvoAPI {
 		order?: 'date-desc' | 'date-asc' | 'rate-desc' | 'rate-asc';
 		limit?: number;
 	} = {}) {
-
 		let url = `${this.baseUrl}/action/word-pronunciations/format/json/word/${encodeURIComponent(word)}`;
 		
 		// Add optional parameters
@@ -44,26 +41,35 @@ class ForvoAPI {
 		// Add API key at the end
 		url += `/key/${this.apiKey}`;
 
-		const response = await fetch(url);
-		
-		if (!response.ok) {
-			throw new Error(`Failed to fetch pronunciations: ${response.statusText}`);
+		try {
+			const response = await requestUrl({
+				url: url,
+				method: 'GET'
+			});
+			
+			const data = response.json;
+			if (data.error) {
+				throw new Error(`Forvo API error: ${data.error}`);
+			}
+			
+			return data;
+		} catch (error) {
+			console.error('Error fetching pronunciations:', error);
+			throw new Error(`Failed to fetch pronunciations: ${error.message}`);
 		}
-		
-		const data = await response.json();
-		if (data.error) {
-			throw new Error(`Forvo API error: ${data.error}`);
-		}
-		
-		return data;
 	}
 
 	async downloadPronunciation(url: string): Promise<ArrayBuffer> {
-		const response = await fetch(url);
-		if (!response.ok) {
-			throw new Error(`Failed to download pronunciation: ${response.statusText}`);
+		try {
+			const response = await requestUrl({
+				url: url,
+				method: 'GET'
+			});
+			return response.arrayBuffer;
+		} catch (error) {
+			console.error('Error downloading pronunciation:', error);
+			throw new Error(`Failed to download pronunciation: ${error.message}`);
 		}
-		return await response.arrayBuffer();
 	}
 }
 
@@ -140,7 +146,6 @@ export default class PronunciationDownloader extends Plugin {
 		await this.saveData(this.settings);
 	}
 }
-
 
 class PronunciationSettingTab extends PluginSettingTab {
 	plugin: PronunciationDownloader;
