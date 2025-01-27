@@ -10,6 +10,61 @@ const DEFAULT_SETTINGS: PronunciationDownloaderSettings = {
 	downloadPath: 'pronunciations'
 }
 
+class LanguageSelectionModal extends Modal {
+	private word: string;
+	private editor?: Editor;
+	private plugin: PronunciationDownloader;
+	private languages = [
+		{ code: '39', name: 'English' },
+		{ code: '76', name: 'Japanese' },
+		{ code: '186', name: 'Mandarin Chinese' }
+	];
+
+	constructor(app: App, plugin: PronunciationDownloader, word: string, editor?: Editor) {
+		super(app);
+		this.plugin = plugin;
+		this.word = word;
+		this.editor = editor;
+	}
+
+	onOpen() {
+		const { contentEl } = this;
+		contentEl.empty();
+
+		contentEl.createEl('h2', { text: 'Select Language' });
+		
+		const buttonsContainer = contentEl.createDiv({ cls: 'language-buttons' });
+		
+		this.languages.forEach(lang => {
+			const btn = buttonsContainer.createEl('button', { text: lang.name });
+			btn.onclick = async () => {
+				await this.plugin.downloadPronunciationWithLanguage(this.word, lang.code, this.editor);
+				this.close();
+			};
+		});
+
+		contentEl.createEl('style', {
+			text: `
+				.language-buttons {
+					display: grid;
+					grid-template-columns: repeat(2, 1fr);
+					gap: 10px;
+					padding: 10px;
+				}
+				.language-buttons button {
+					padding: 8px;
+					cursor: pointer;
+				}
+			`
+		});
+	}
+
+	onClose() {
+		const { contentEl } = this;
+		contentEl.empty();
+	}
+}
+
 class ForvoAPI {
 	private apiKey: string;
 	private baseUrl = 'https://apifree.forvo.com';
@@ -28,16 +83,15 @@ class ForvoAPI {
 		limit?: number;
 	} = {}) {
 		let url = `${this.baseUrl}/action/word-pronunciations/format/json/word/${encodeURIComponent(word)}`;
-		
+
 		// Add optional parameters
-		if (options.language) url += `/language/${options.language}`;
-		if (options.sex) url += `/sex/${options.sex}`;
-		if (options.order) url += `/order/${options.order}`;
-		if (options.country) url += `/country/${options.country}`;
+		if (options.language) url += `/id_lang_speak/${options.language}`;
 		if (options.username) url += `/username/${options.username}`;
+		if (options.sex) url += `/sex/${options.sex}`;
 		if (options.rate) url += `/rate/${options.rate}`;
+		if (options.order) url += `/order/${options.order}`;
 		if (options.limit) url += `/limit/${options.limit}`;
-		
+
 		// Add API key at the end
 		url += `/key/${this.apiKey}`;
 
@@ -77,9 +131,11 @@ export default class PronunciationDownloader extends Plugin {
 	settings: PronunciationDownloaderSettings;
 	private forvoApi: ForvoAPI;
 
-	async downloadPronunciation(word: string, editor?: Editor) {
+	async downloadPronunciationWithLanguage(word: string, language: string, editor?: Editor) {
 		try {
-			const result = await this.forvoApi.searchWord(word);
+			const result = await this.forvoApi.searchWord(word, {
+				language: language
+			});
 			if (result.items && result.items.length > 0) {
 				const pronunciation = result.items[0];
 				const audioData = await this.forvoApi.downloadPronunciation(pronunciation.pathmp3);
@@ -116,7 +172,7 @@ export default class PronunciationDownloader extends Plugin {
 			if (activeView) {
 				const selection = activeView.editor.getSelection();
 				if (selection) {
-					this.downloadPronunciation(selection, activeView.editor);
+					new LanguageSelectionModal(this.app, this, selection, activeView.editor).open();
 				} else {
 					new Notice('Please select a word to download its pronunciation');
 				}
@@ -130,7 +186,7 @@ export default class PronunciationDownloader extends Plugin {
 			editorCallback: (editor: Editor) => {
 				const selection = editor.getSelection();
 				if (selection) {
-					this.downloadPronunciation(selection, editor);
+					new LanguageSelectionModal(this.app, this, selection, editor).open();
 				} else {
 					new Notice('Please select a word to download its pronunciation');
 				}
