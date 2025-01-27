@@ -1,7 +1,7 @@
 {
 	"id": "pronunciation-downloader",
 	"name": "Pronunciation Downloader",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"minAppVersion": "0.15.0",
 	"description": "Download pronunciations of words from Forvo.",
 	"author": "Will Wu",
