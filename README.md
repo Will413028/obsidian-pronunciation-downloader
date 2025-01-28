@@ -24,15 +24,6 @@ A plugin for Obsidian that allows you to download pronunciations directly in you
 
 ## Usage
 
-### Method 1: Using the Ribbon Icon
-
-1. Select a word in your note
-2. Click the sound icon in the left ribbon
-3. Choose the desired language
-4. The pronunciation will be downloaded and automatically embedded in your note
-
-### Method 2: Using the Command Palette
-
 1. Select a word in your note
 2. Open the Command Palette (Ctrl/Cmd + P)
 3. Search for "Download pronunciation for selected word"
